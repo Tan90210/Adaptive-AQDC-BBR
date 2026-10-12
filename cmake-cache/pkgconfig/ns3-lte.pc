@@ -1,0 +1,13 @@
+exec_prefix="/usr/local/bin"
+libdir="/usr/local/lib"
+includedir="/usr/local/include"
+
+Name: ns3-lte
+Description: 
+URL: 
+Version: 3.46.1
+Requires:  ns3-fd-net-device ns3-spectrum ns3-buildings ns3-virtual-net-device ns3-point-to-point ns3-applications ns3-csma ns3-config-store
+Requires.private: 
+Cflags: -I"${includedir}" 
+Libs: -L"${libdir}" -lns3.46.1-lte-default  -lns3.46.1-fd-net-device-default -lns3.46.1-spectrum-default -lns3.46.1-buildings-default -lns3.46.1-virtual-net-device-default -lns3.46.1-point-to-point-default -lns3.46.1-applications-default -lns3.46.1-csma-default -lns3.46.1-config-store-default -lstdc++exp
+Libs.private: -L"${libdir}" 

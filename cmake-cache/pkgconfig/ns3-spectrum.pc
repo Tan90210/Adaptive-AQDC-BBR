@@ -1,0 +1,13 @@
+exec_prefix="/usr/local/bin"
+libdir="/usr/local/lib"
+includedir="/usr/local/include"
+
+Name: ns3-spectrum
+Description: 
+URL: 
+Version: 3.46.1
+Requires:  ns3-propagation ns3-antenna ns3-buildings
+Requires.private: 
+Cflags: -I"${includedir}" 
+Libs: -L"${libdir}" -lns3.46.1-spectrum-default  -lns3.46.1-propagation-default -lns3.46.1-antenna-default -lns3.46.1-buildings-default -lstdc++exp
+Libs.private: -L"${libdir}" 
