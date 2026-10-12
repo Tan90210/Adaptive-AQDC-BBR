@@ -1,52 +1,15 @@
-*.diff
-*.orig
-*.patch
-*.rej
-
-*.o
-*.pyc
-*.pyo
-
-*.cwnd
-*.dat
-*.log
-*.mob
-*.pcap
-*.plt
-*.routes
-*.tr
-[D|U]l[A-Z][a-z]*Stats.txt
-
-\#*#
-*~
-
-testpy-output
-
-bindings/python/pybindgen/
-
-venv/
-
-ms_print.*
-massif.*
-coverity
-TAGS
-
-.lock-ns3_*
-.ns3rc
-
-build-dir/
+# ns-3 build artifacts
 build/
-/.cproject
-/.project
+.waf*
+.lock-waf*
+bin/
+lib/
 
-version.cache
+# Python compiled files
+__pycache__/
+*.pyc
 
-.gitlab-ci-local/
+# IDEs and System files
+.vscode/
 .idea/
-cmake-*/
-vcpkg/
-
-.vs/
-
-# Ignore local cache used by e.g. clangd
-.cache/
+.DS_Store
