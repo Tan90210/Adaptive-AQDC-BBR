@@ -7,6 +7,7 @@
             "label": "Build",
             "type": "shell",
             "command": "./ns3",
+            "args": ["build"],
             "group": {
                 "kind": "build",
                 "isDefault": true

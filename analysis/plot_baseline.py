@@ -1,81 +1,99 @@
+"""Plot the latest complete four-file BBR baseline from this checkout."""
 
+import argparse
 from pathlib import Path
-import numpy as np
+import re
+
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 
-ROOT = Path.home() / "ns-3-aqdc"
+ROOT = Path(__file__).resolve().parents[1]
+TRACE_FILES = ("cwnd.dat", "rtt.dat", "queueSize.dat", "throughput.dat")
 
-# Most recent baseline experiment containing all four traces
-candidates = sorted(
-    p for p in (ROOT / "results/bbr-baseline").iterdir()
-    if p.is_dir()
-    and all((p / f).exists() for f in [
-        "cwnd.dat", "rtt.dat",
-        "queueSize.dat", "throughput.dat"
-    ])
-)
 
-if not candidates:
-    raise FileNotFoundError("No complete baseline run found")
+def latest_baseline(results_dir):
+    candidates = []
+    if results_dir.is_dir():
+        for path in results_dir.iterdir():
+            match = re.fullmatch(r"bbr-baseline-v([1-9][0-9]*)", path.name)
+            if match and path.is_dir() and all(
+                (path / name).is_file() and (path / name).stat().st_size > 0
+                for name in TRACE_FILES
+            ):
+                candidates.append((int(match.group(1)), path))
+    if not candidates:
+        raise FileNotFoundError(f"No complete bbr-baseline-v<number> run in {results_dir}")
+    return max(candidates, key=lambda item: item[0])[1]
 
-run_dir = max(candidates, key=lambda p: p.stat().st_mtime)
-output = ROOT / "analysis" / "figures"
-output.mkdir(parents=True, exist_ok=True)
 
-def read_two_columns(filename):
-    return np.atleast_2d(np.loadtxt(run_dir / filename))
+def validate_trace(data, filename):
+    if data.ndim != 2 or data.shape[1] != 2 or not len(data):
+        raise ValueError(f"Expected two nonempty columns in {filename}")
+    if not np.isfinite(data).all() or (data < 0).any():
+        raise ValueError(f"Nonfinite or negative values in {filename}")
+    if (np.diff(data[:, 0]) < 0).any():
+        raise ValueError(f"Timestamps are out of order in {filename}")
+    return data
 
-cwnd = read_two_columns("cwnd.dat")
-rtt = read_two_columns("rtt.dat")
-queue = read_two_columns("queueSize.dat")
 
-# Throughput data contains suffixes such as "0.2s 10Mbps"
-throughput = []
-with open(run_dir / "throughput.dat") as f:
-    for line in f:
-        parts = line.split()
-        if len(parts) >= 3:
-            throughput.append((
-                float(parts[0].removesuffix("s")),
-                float(parts[1])
-            ))
+def read_trace(path):
+    return validate_trace(np.atleast_2d(np.loadtxt(path)), path)
 
-throughput = np.array(throughput)
 
-def plot_trace(data, ylabel, title, filename):
-    plt.figure(figsize=(10, 4))
-    plt.plot(data[:, 0], data[:, 1], linewidth=1)
-    plt.xlabel("Simulation time (s)")
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(output / filename, dpi=200)
-    plt.close()
+def read_throughput(path):
+    rows = []
+    for number, line in enumerate(path.read_text().splitlines(), 1):
+        if not line.strip():
+            continue
+        fields = line.split()
+        if len(fields) != 3 or not fields[0].endswith("s") or fields[2] != "Mbps":
+            raise ValueError(f"Invalid throughput format at {path}:{number}")
+        rows.append((float(fields[0][:-1]), float(fields[1])))
+    return validate_trace(np.asarray(rows), path)
 
-plot_trace(cwnd, "Congestion window (segments)",
-           "BBRv1 Congestion Window", "cwnd.png")
 
-plot_trace(rtt, "Smoothed RTT (ms)",
-           "BBRv1 TCP RTT Estimate", "rtt.png")
+def plot_trace(data, ylabel, title, destination):
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(data[:, 0], data[:, 1], linewidth=1)
+    ax.set(xlabel="Simulation time (s)", ylabel=ylabel, title=title)
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(destination, dpi=200)
+    plt.close(fig)
 
-plot_trace(queue, "Queue occupancy (reported units)",
-           "BBRv1 Bottleneck Queue", "queue.png")
 
-plot_trace(throughput, "Throughput (Mbps)",
-           "BBRv1 Throughput", "throughput.png")
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-dir", type=Path, help="Choose a specific baseline folder")
+    args = parser.parse_args()
+    run_dir = args.run_dir.resolve() if args.run_dir else latest_baseline(ROOT / "results")
+    cwnd = read_trace(run_dir / "cwnd.dat")
+    rtt = read_trace(run_dir / "rtt.dat")
+    queue = read_trace(run_dir / "queueSize.dat")
+    throughput = read_throughput(run_dir / "throughput.dat")
+    output = ROOT / "analysis" / "figures"
+    output.mkdir(parents=True, exist_ok=True)
+    plots = [
+        (cwnd, "Congestion window (segments)", "BBRv1 Congestion Window", "cwnd.png"),
+        (rtt, "Smoothed RTT (ms)", "BBRv1 TCP RTT Estimate", "rtt.png"),
+        (queue, "Queue occupancy (packets)", "BBRv1 Bottleneck Queue", "queue.png"),
+        (throughput, "Receiver goodput (Mbps)", "BBRv1 Receiver Goodput", "throughput.png"),
+    ]
+    for data, ylabel, title, filename in plots:
+        plot_trace(data, ylabel, f"{title} - {run_dir.name}", output / filename)
+    print("Baseline run:", run_dir)
+    print("Graphs saved to:", output)
+    print("Smoothed RTT change-event statistics (not raw RTT percentiles):")
+    print(f"Mean: {np.mean(rtt[:, 1]):.2f} ms")
+    print(f"P95: {np.percentile(rtt[:, 1], 95):.2f} ms")
+    print(f"P99: {np.percentile(rtt[:, 1], 99):.2f} ms")
+    print(f"Average sampled receiver goodput: {np.mean(throughput[:, 1]):.2f} Mbps")
+    print(f"Average sampled queue occupancy: {np.mean(queue[:, 1]):.2f} packets")
+    print(f"Maximum sampled queue occupancy: {np.max(queue[:, 1]):.0f} packets")
 
-print("Baseline run:", run_dir)
-print("Graphs saved to:", output)
-print()
-print("TCP RTT estimator statistics:")
-print("Mean:", round(np.mean(rtt[:, 1]), 2), "ms")
-print("P95:", round(np.percentile(rtt[:, 1], 95), 2), "ms")
-print("P99:", round(np.percentile(rtt[:, 1], 99), 2), "ms")
-print()
-print("Average reported throughput:",
-      round(np.mean(throughput[:, 1]), 2), "Mbps")
-print("Average sampled queue occupancy:",
-      round(np.mean(queue[:, 1]), 2))
-print("Maximum sampled queue occupancy:",
-      np.max(queue[:, 1]))
+
+if __name__ == "__main__":
+    main()

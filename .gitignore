@@ -1,5 +1,7 @@
 # ns-3 build artifacts
 build/
+cmake-cache/
+.lock-ns3*
 .waf*
 .lock-waf*
 bin/
@@ -8,6 +10,10 @@ lib/
 # Python compiled files
 __pycache__/
 *.pyc
+.venv/
+
+# Generated baseline runs; the existing tracked v1 reference stays tracked.
+/results/bbr-baseline-v*/
 
 # IDEs and System files
 .vscode/
