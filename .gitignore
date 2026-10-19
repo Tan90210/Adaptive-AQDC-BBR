@@ -14,6 +14,7 @@ __pycache__/
 
 # Generated baseline runs; the existing tracked v1 reference stays tracked.
 /results/bbr-baseline-v*/
+/results/aqdc-baseline-v*/
 
 # IDEs and System files
 .vscode/

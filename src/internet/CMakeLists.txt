@@ -84,6 +84,7 @@ set(source_files
     model/ripng-header.cc
     model/ripng.cc
     model/rtt-estimator.cc
+    model/tcp-aqdc-bbr.cc
     model/tcp-bbr.cc
     model/tcp-bic.cc
     model/tcp-congestion-ops.cc
@@ -209,6 +210,7 @@ set(header_files
     model/ripng-header.h
     model/ripng.h
     model/rtt-estimator.h
+    model/tcp-aqdc-bbr.h
     model/tcp-bbr.h
     model/tcp-bic.h
     model/tcp-congestion-ops.h
@@ -290,6 +292,7 @@ set(test_sources
     test/neighbor-cache-test.cc
     test/rtt-test.cc
     test/tcp-advertised-window-test.cc
+    test/tcp-aqdc-test.cc
     test/tcp-bbr-test.cc
     test/tcp-bic-test.cc
     test/tcp-bytes-in-flight-test.cc

@@ -6,4 +6,6 @@
 !subdir/
 !scratch-simulator.cc
 !CMakeLists.txt
-!aqdc-experiment.cc
+!bbr-baseline-experiment.cc
+!baseline-experiment.h
+!aqdc-baseline-experiment.cc

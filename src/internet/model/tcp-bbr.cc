@@ -804,4 +804,28 @@ TcpBbr::Fork()
     return CopyObject<TcpBbr>(this);
 }
 
+DataRate
+TcpBbr::GetBbrBandwidth() const
+{
+    return m_maxBwFilter.GetBest();
+}
+
+Time
+TcpBbr::GetBbrMinRtt() const
+{
+    return m_minRtt.Get();
+}
+
+void
+TcpBbr::RefreshMinRttTimestamp()
+{
+    m_minRttStamp = Simulator::Now();
+}
+
+void
+TcpBbr::MarkProbeRttAppLimited(Ptr<TcpSocketState> tcb)
+{
+    m_rateOps->SetAppLimited(tcb->m_bytesInFlight.Get());
+}
+
 } // namespace ns3

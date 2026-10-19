@@ -1,8 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-// Run from the repository root: ./ns3 run aqdc-experiment
-// Each run creates results/bbr-baseline-vN/ with exactly four .dat files.
+// Shared fixed-topology harness: BBR and AQDC differ only in controller TypeId.
+#ifndef AQDC_PROJECT_BASELINE_EXPERIMENT_H
+#define AQDC_PROJECT_BASELINE_EXPERIMENT_H
 
 #include "ns3/applications-module.h"
+#include "ns3/tcp-aqdc-bbr.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/network-module.h"
@@ -18,11 +20,46 @@
 using namespace ns3;
 namespace fs = std::filesystem;
 
+namespace ns3::aqdc_project
+{
 namespace
 {
 std::ofstream cwndFile, rttFile, queueFile, throughputFile;
 Ptr<PacketSink> sink;
 Ptr<QueueDisc> queueDisc;
+Ptr<TcpAqdcBbr> aqdc;
+bool diagnostics = false;
+uint32_t debtIncreases = 0;
+uint32_t compensationEntries = 0;
+uint32_t compensationCompletions = 0;
+
+void
+DebtChanged(double oldDebt, double newDebt)
+{
+    if (newDebt > oldDebt)
+    {
+        ++debtIncreases;
+    }
+}
+
+void
+CompensationEvent(uint8_t event, double debt, uint32_t target, uint32_t inflight)
+{
+    if (event == 0)
+    {
+        ++compensationEntries;
+    }
+    else
+    {
+        ++compensationCompletions;
+    }
+    if (diagnostics)
+    {
+        std::cout << std::setprecision(12) << "AQDC " << (event == 0 ? "entry" : "complete")
+                  << " time_s=" << Now().GetSeconds() << " debt_bytes=" << debt
+                  << " target_bytes=" << target << " inflight_bytes=" << inflight << '\n';
+    }
+}
 constexpr double startTime = 0.1;
 constexpr double stopTime = 120;
 constexpr double drainTime = 1;
@@ -61,6 +98,14 @@ AttachTraces(Ptr<BulkSendApplication> application)
                     "Missing congestion-window trace");
     NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("RTT", MakeCallback(&RttChanged)),
                     "Missing RTT trace");
+    PointerValue controller;
+    socket->GetAttribute("CongestionOps", controller);
+    aqdc = DynamicCast<TcpAqdcBbr>(controller.Get<TcpCongestionOps>());
+    if (aqdc)
+    {
+        aqdc->TraceConnectWithoutContext("QueueDebt", MakeCallback(&DebtChanged));
+        aqdc->TraceConnectWithoutContext("Compensation", MakeCallback(&CompensationEvent));
+    }
 }
 
 void
@@ -90,10 +135,11 @@ SampleThroughput()
 }
 } // namespace
 
-int
-main(int argc, char* argv[])
+inline int
+RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folderPrefix)
 {
     CommandLine cmd(__FILE__);
+    cmd.AddValue("diagnostics", "Print AQDC compensation events to the console", diagnostics);
     cmd.Parse(argc, argv);
     RngSeedManager::SetSeed(1);
     RngSeedManager::SetRun(1);
@@ -104,7 +150,7 @@ main(int argc, char* argv[])
     // Atomically reserve the next free version, preserving previous baselines.
     for (uint64_t version = 1;; ++version)
     {
-        output = root / ("bbr-baseline-v" + std::to_string(version));
+        output = root / (folderPrefix + "-v" + std::to_string(version));
         if (fs::create_directory(output))
         {
             break;
@@ -115,7 +161,7 @@ main(int argc, char* argv[])
     Open(queueFile, output / "queueSize.dat");
     Open(throughputFile, output / "throughput.dat");
 
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(TcpBbr::GetTypeId()));
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue(controller));
     Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(segmentSize));
     Config::SetDefault("ns3::TcpSocket::SndBufSize", UintegerValue(4194304));
     Config::SetDefault("ns3::TcpSocket::RcvBufSize", UintegerValue(6291456));
@@ -176,9 +222,20 @@ main(int argc, char* argv[])
                         DynamicCast<BulkSendApplication>(senderApps.Get(0)));
     Simulator::ScheduleNow(&SampleQueue);
     Simulator::Schedule(Seconds(startTime + sampleInterval), &SampleThroughput);
+    std::cout << "Controller: " << controller.GetName() << '\n';
     std::cout << "Results: " << output << '\n';
     Simulator::Stop(Seconds(stopTime + drainTime));
     Simulator::Run();
+    if (aqdc)
+    {
+        std::cout << "AQDC summary debt_increases=" << debtIncreases
+                  << " entries=" << compensationEntries
+                  << " completions=" << compensationCompletions
+                  << " remaining_debt_bytes=" << aqdc->GetQueueDebt() << '\n';
+    }
     Simulator::Destroy();
     return 0;
 }
+
+} // namespace ns3::aqdc_project
+#endif // AQDC_PROJECT_BASELINE_EXPERIMENT_H

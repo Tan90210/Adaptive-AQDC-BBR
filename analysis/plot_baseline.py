@@ -1,4 +1,4 @@
-"""Plot the latest complete four-file BBR baseline from this checkout."""
+"""Plot a complete four-file BBR or AQDC baseline from this checkout."""
 
 import argparse
 from pathlib import Path
@@ -14,18 +14,20 @@ ROOT = Path(__file__).resolve().parents[1]
 TRACE_FILES = ("cwnd.dat", "rtt.dat", "queueSize.dat", "throughput.dat")
 
 
-def latest_baseline(results_dir):
+def latest_baseline(results_dir, algorithm="bbr"):
+    if algorithm not in ("bbr", "aqdc"):
+        raise ValueError("Algorithm must be bbr or aqdc")
     candidates = []
     if results_dir.is_dir():
         for path in results_dir.iterdir():
-            match = re.fullmatch(r"bbr-baseline-v([1-9][0-9]*)", path.name)
+            match = re.fullmatch(rf"{algorithm}-baseline-v([1-9][0-9]*)", path.name)
             if match and path.is_dir() and all(
                 (path / name).is_file() and (path / name).stat().st_size > 0
                 for name in TRACE_FILES
             ):
                 candidates.append((int(match.group(1)), path))
     if not candidates:
-        raise FileNotFoundError(f"No complete bbr-baseline-v<number> run in {results_dir}")
+        raise FileNotFoundError(f"No complete {algorithm}-baseline-v<number> run in {results_dir}")
     return max(candidates, key=lambda item: item[0])[1]
 
 
@@ -68,13 +70,16 @@ def plot_trace(data, ylabel, title, destination):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, help="Choose a specific baseline folder")
+    parser.add_argument("--algorithm", choices=("bbr", "aqdc"), default="bbr")
     args = parser.parse_args()
-    run_dir = args.run_dir.resolve() if args.run_dir else latest_baseline(ROOT / "results")
+    run_dir = args.run_dir.resolve() if args.run_dir else latest_baseline(ROOT / "results", args.algorithm)
+    is_aqdc = run_dir.name.startswith("aqdc-baseline-")
+    label = "AQDC-BBRv1" if is_aqdc else "BBRv1"
     cwnd = read_trace(run_dir / "cwnd.dat")
     rtt = read_trace(run_dir / "rtt.dat")
     queue = read_trace(run_dir / "queueSize.dat")
     throughput = read_throughput(run_dir / "throughput.dat")
-    output = ROOT / "analysis" / "figures"
+    output = ROOT / "analysis" / "figures" / ("aqdc" if is_aqdc else "bbrv1")
     output.mkdir(parents=True, exist_ok=True)
     plots = [
         (cwnd, "Congestion window (segments)", "BBRv1 Congestion Window", "cwnd.png"),
@@ -83,7 +88,7 @@ def main():
         (throughput, "Receiver goodput (Mbps)", "BBRv1 Receiver Goodput", "throughput.png"),
     ]
     for data, ylabel, title, filename in plots:
-        plot_trace(data, ylabel, f"{title} - {run_dir.name}", output / filename)
+        plot_trace(data, ylabel, f"{title.replace('BBRv1', label)} - {run_dir.name}", output / filename)
     print("Baseline run:", run_dir)
     print("Graphs saved to:", output)
     print("Smoothed RTT change-event statistics (not raw RTT percentiles):")

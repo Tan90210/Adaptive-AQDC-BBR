@@ -15,8 +15,8 @@ class BaselineReaderTest(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.addCleanup(self.temp.cleanup)
 
-    def baseline(self, version):
-        path = self.root / f"bbr-baseline-v{version}"
+    def baseline(self, version, algorithm="bbr"):
+        path = self.root / f"{algorithm}-baseline-v{version}"
         path.mkdir()
         for name in TRACE_FILES:
             (path / name).write_text("0 1\n", encoding="ascii")
@@ -32,6 +32,12 @@ class BaselineReaderTest(unittest.TestCase):
     def test_missing_results_report_clear_error(self):
         with self.assertRaisesRegex(FileNotFoundError, "No complete"):
             latest_baseline(self.root / "missing")
+
+    def test_controller_versions_are_selected_independently(self):
+        bbr = self.baseline(20)
+        aqdc = self.baseline(2, "aqdc")
+        self.assertEqual(latest_baseline(self.root), bbr)
+        self.assertEqual(latest_baseline(self.root, "aqdc"), aqdc)
 
     def test_single_sample_trace_is_valid(self):
         path = self.root / "rtt.dat"

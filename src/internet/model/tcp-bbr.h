@@ -166,7 +166,7 @@ class TcpBbr : public TcpCongestionOps
      * @brief Called on exiting from BBR_PROBE_RTT state, it eithers invoke EnterProbeBW () or
      * EnterStartup ()
      */
-    void ExitProbeRTT();
+    virtual void ExitProbeRTT();
 
     /**
      * @brief Gets BBR state.
@@ -190,7 +190,7 @@ class TcpBbr : public TcpCongestionOps
      * @brief Handles the steps for BBR_PROBE_RTT state.
      * @param tcb the socket state.
      */
-    void HandleProbeRTT(Ptr<TcpSocketState> tcb);
+    virtual void HandleProbeRTT(Ptr<TcpSocketState> tcb);
 
     /**
      * @brief Updates pacing rate if socket is restarting from idle state.
@@ -235,7 +235,7 @@ class TcpBbr : public TcpCongestionOps
      * @brief Modulates congestion window in BBR_PROBE_RTT.
      * @param tcb the socket state.
      */
-    void ModulateCwndForProbeRTT(Ptr<TcpSocketState> tcb);
+    virtual void ModulateCwndForProbeRTT(Ptr<TcpSocketState> tcb);
 
     /**
      * @brief Modulates congestion window in CA_RECOVERY.
@@ -283,7 +283,7 @@ class TcpBbr : public TcpCongestionOps
      * @param tcb the socket state.
      * @param rs rate sample.
      */
-    void UpdateBottleneckBandwidth(Ptr<TcpSocketState> tcb, const TcpRateOps::TcpRateSample& rs);
+    virtual void UpdateBottleneckBandwidth(Ptr<TcpSocketState> tcb, const TcpRateOps::TcpRateSample& rs);
 
     /**
      * @brief Updates control parameters congestion windowm, pacing rate, send quantum.
@@ -336,6 +336,17 @@ class TcpBbr : public TcpCongestionOps
      * @param rs rate sample.
      */
     void UpdateAckAggregation(Ptr<TcpSocketState> tcb, const TcpRateOps::TcpRateSample& rs);
+
+  protected:
+    // Narrow extension interface for AQDC; native BBR behavior is unchanged.
+    /** @return Filtered bottleneck bandwidth used by BBR. */
+    DataRate GetBbrBandwidth() const;
+    /** @return BBR's current minimum-RTT model value. */
+    Time GetBbrMinRtt() const;
+    /** Refresh RTT filter age after a derived controller finishes ProbeRTT. */
+    void RefreshMinRttTimestamp();
+    /** Mark window-limited ProbeRTT samples application-limited, as native BBR does. */
+    void MarkProbeRttAppLimited(Ptr<TcpSocketState> tcb);
 
   private:
     BbrMode_t m_state{BbrMode_t::BBR_STARTUP}; //!< Current state of BBR state machine
