@@ -55,37 +55,37 @@ python3 -m pip --python .venv install -r analysis/requirements.txt
 
 The plotter chooses the latest numbered run of the selected controller. Stock BBR figures go to `analysis/figures/bbrv1/`; AQDC figures go to `analysis/figures/aqdc/`. The comparison creates four overlays in `analysis/figures/comparison/` and prints numerical statistics. Use `--run-dir` with the plotter, or `--bbr-run` and `--aqdc-run` with the comparison, to select exact runs. The validator executes AQDC and checks its exact compensation events and four-file output.
 
-`rtt.dat` contains smoothed RTT change events, so its percentiles must not be presented as raw RTT tail latency. Queue samples can miss brief spikes. Old v1 data came from an earlier experiment and must not be assumed to share current settings. Week 2 validates reproduction behavior, not the paper's reported percentages; raw RTT collection is available in final-phase Stage 1; adaptive compensation remains future work.
+`rtt.dat` contains smoothed RTT change events, so its percentiles must not be presented as raw RTT tail latency. Queue samples can miss brief spikes. Old v1 data came from an earlier experiment and must not be assumed to share current settings. Week 2 validates reproduction behavior, not the paper's reported percentages; raw RTT collection is available in final-phase Fixed-coefficient AQDC; adaptive compensation remains future work.
 
 Build caches, binaries, lock files, `.venv/`, and new baseline runs are ignored. The v1 reference and selected datasets referenced by the saved validation manifests are versioned; other generated runs remain ignored. Selected experiment results can be added explicitly with `git add -f`. Normal builds use this checkout's persistent CMake cache; no temporary-cache workaround is needed.
 
 The comparison script also saves four separate Week 1/Week 2 overlay graphs in `analysis/figures/comparison/`: `cwnd.png`, `rtt.png`, `queue.png`, and `throughput.png`. Blue solid lines show Week 1 BBRv1; orange dashed lines show Week 2 AQDC-BBRv1. Each figure identifies its source runs.
 
 
-## Final phase — Stage 1
+## Final phase — Fixed-coefficient AQDC
 
-Stage 1 adds raw RTT measurements and a **fixed** AQDC compensation coefficient. The coefficient does not adapt yet. Read the [simple implementation walkthrough](doc/stage1-fixed-coefficient-validation.md).
+Fixed-coefficient AQDC adds raw RTT measurements and a **fixed** AQDC compensation coefficient. The coefficient does not adapt yet. Read the [simple implementation walkthrough](doc/aqdc-fixed-validation.md).
 
 **Presentation outputs:**
-- `analysis/figures/stage1/stage1-cwnd.png`
-- `analysis/figures/stage1/stage1-rtt.png` (raw RTT)
-- `analysis/figures/stage1/stage1-queue.png`
-- `analysis/figures/stage1/stage1-throughput.png` (receiver goodput)
-- `analysis/stage1/stage1-metrics.csv` (one main numerical summary)
+- `analysis/figures/aqdc-fixed/aqdc-fixed-cwnd.png`
+- `analysis/figures/aqdc-fixed/aqdc-fixed-rtt.png` (raw RTT)
+- `analysis/figures/aqdc-fixed/aqdc-fixed-queue.png`
+- `analysis/figures/aqdc-fixed/aqdc-fixed-throughput.png` (receiver goodput)
+- `analysis/aqdc-fixed/aqdc-fixed-metrics.csv` (one main numerical summary)
 
-There are exactly four Stage 1 graphs in one folder, each showing only original AQDC (alpha=1) versus fixed AQDC (alpha=1.5). The 1.5 value illustrates stronger compensation; it is not claimed optimal. The metrics CSV retains the full six-controller sweep. Publishing another comparison replaces this set instead of creating graph folders for each run. `analysis/stage1/stage1-current-run.json` identifies the exact source manifest. Versioned manifests, console logs and episode CSVs remain supporting evidence; they are not additional presentation outputs. Old Week 1/2 plots remain separate.
+There are exactly four Fixed-coefficient AQDC graphs in one folder, each showing only original AQDC (alpha=1) versus fixed AQDC (alpha=1.5). The 1.5 value illustrates stronger compensation; it is not claimed optimal. The metrics CSV retains the full six-controller sweep. Publishing another comparison replaces this set instead of creating graph folders for each run. `analysis/aqdc-fixed/aqdc-fixed-current-run.json` identifies the exact source manifest. Versioned manifests, console logs and episode CSVs remain supporting evidence; they are not additional presentation outputs. Old Week 1/2 plots remain separate.
 
 Recreate the existing four presentation graphs without rerunning simulations:
 
 ```bash
-.venv/bin/python analysis/stage1_fixed_coefficients.py --analyse analysis/stage1/stage1-duration-120s-v2/stage1-run-manifest.json --publish
+.venv/bin/python analysis/aqdc_fixed_analysis.py --analyse analysis/aqdc-fixed/aqdc-fixed-duration-120s-v2/aqdc-fixed-run-manifest.json --publish
 ```
 
 Run a fresh complete comparison:
 
 ```bash
 ./ns3 build test-runner bbr-baseline-experiment aqdc-baseline-experiment aqdc-fixed-experiment -j 4
-.venv/bin/python analysis/stage1_fixed_coefficients.py --duration 120
+.venv/bin/python analysis/aqdc_fixed_analysis.py --duration 120
 ```
 
-Each simulation run still contains exactly four `.dat` files. Stage 1 `rtt.dat` has the versioned columns `time_s raw_estimator_rtt_ms smoothed_rtt_ms`. Reanalysis without `--publish` updates numerical supporting evidence only, so reviewing the longer run does not replace the presentation graphs.
+Each simulation run still contains exactly four `.dat` files. Fixed-coefficient AQDC `rtt.dat` has the versioned columns `time_s raw_estimator_rtt_ms smoothed_rtt_ms`. Reanalysis without `--publish` updates numerical supporting evidence only, so reviewing the longer run does not replace the presentation graphs.

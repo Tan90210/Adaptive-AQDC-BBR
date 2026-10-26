@@ -1,0 +1,7 @@
+Controller: ns3::TcpAqdcBbr
+Results: "/home/tanay/Adaptive-AQDC-BBR/results/aqdc-raw-baseline-v2"
+AQDC entry time_s=10.150348255 debt_bytes=41648.21875 coefficient=1 target_bytes=61402 inflight_bytes=97016
+AQDC complete time_s=10.181589855 debt_bytes=41648.21875 coefficient=1 target_bytes=61402 inflight_bytes=59368
+AQDC entry time_s=20.238806813 debt_bytes=2686.5085 coefficient=1 target_bytes=106672 inflight_bytes=105704
+AQDC complete time_s=20.238806813 debt_bytes=2686.5085 coefficient=1 target_bytes=106672 inflight_bytes=105704
+AQDC summary debt_increases=551 entries=2 completions=2 remaining_debt_bytes=197621.028

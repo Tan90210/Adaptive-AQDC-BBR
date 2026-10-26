@@ -1,0 +1,96 @@
+{
+  "duration_s": 600.0,
+  "seed": 1,
+  "run": 1,
+  "coefficients": [
+    0.5,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "purpose": "Fixed-coefficient ablation; no adaptation or tuned optimum",
+  "git_head": "e7152634315d64b2ad7befd7a673c910e700f756",
+  "git_status": " M .gitignore\n M README.md\n M analysis/compare_baselines.py\n M analysis/figures/week2-comparison.png\n M doc/aqdc-week2.md\n M scratch/.gitignore\n M scratch/baseline-experiment.h\n M src/internet/CMakeLists.txt\n M src/internet/model/tcp-aqdc-bbr.cc\n M src/internet/model/tcp-aqdc-bbr.h\n M src/internet/model/tcp-socket-base.cc\n M src/internet/model/tcp-socket-base.h\n M src/internet/test/tcp-aqdc-test.cc\n M src/internet/test/tcp-rtt-estimation.cc\n?? analysis/figures/comparison/\n?? analysis/figures/aqdc-fixed/\n?? analysis/aqdc-fixed/\n?? analysis/aqdc_fixed_analysis.py\n?? analysis/test_aqdc_fixed_analysis.py\n?? scratch/aqdc-fixed-experiment.cc\n?? src/internet/model/tcp-aqdc-fixed.cc\n?? src/internet/model/tcp-aqdc-fixed.h\n",
+  "source_sha256": {
+    "scratch/baseline-experiment.h": "16f9b5577afc1e50ceeaa8208f66f4a37cf16c57dd1306896ccef41e0e2e6ecc",
+    "src/internet/model/tcp-aqdc-bbr.cc": "901de3759738f553527ba21bd629c3e4a46b8076db82a60f3d2c0411e3e4210d",
+    "src/internet/model/tcp-aqdc-fixed.cc": "a71b9f6ee30b0bf5cbdfef5e26c757b5adf0fea7765d5229902f792e709c25b0",
+    "src/internet/model/tcp-socket-base.cc": "1b3078eb5b8b76e108ef99ae22663a08b024fc69bb1125db8b735ced3ecd8bc4",
+    "analysis/aqdc_fixed_analysis.py": "4bbe93ea6ca708559394896056c4d497efaa438c6554e35b79a9bf7eb477c14b"
+  },
+  "runs": [
+    {
+      "key": "bbr",
+      "label": "BBRv1",
+      "coefficient": 1.0,
+      "controller": "ns3::TcpBbr",
+      "command": "bbr-baseline-experiment --raw-rtt=1 --duration=600 --diagnostics=1",
+      "results": "results/bbr-raw-baseline-v2",
+      "console_log": "aqdc-fixed-bbr.console.log"
+    },
+    {
+      "key": "original",
+      "label": "Original AQDC",
+      "coefficient": 1.0,
+      "controller": "ns3::TcpAqdcBbr",
+      "command": "aqdc-baseline-experiment --raw-rtt=1 --duration=600 --diagnostics=1",
+      "results": "results/aqdc-raw-baseline-v2",
+      "console_log": "aqdc-fixed-original.console.log"
+    },
+    {
+      "key": "fixed-0.5",
+      "label": "Fixed alpha=0.5",
+      "coefficient": 0.5,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --raw-rtt=1 --duration=600 --diagnostics=1 --coefficient=0.5",
+      "results": "results/aqdc-fixed-alpha-0p5-v2",
+      "console_log": "aqdc-fixed-alpha-0.5.console.log"
+    },
+    {
+      "key": "fixed-1",
+      "label": "Fixed alpha=1",
+      "coefficient": 1.0,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --raw-rtt=1 --duration=600 --diagnostics=1 --coefficient=1",
+      "results": "results/aqdc-fixed-alpha-1-v2",
+      "console_log": "aqdc-fixed-alpha-1.console.log"
+    },
+    {
+      "key": "fixed-1.5",
+      "label": "Fixed alpha=1.5",
+      "coefficient": 1.5,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --raw-rtt=1 --duration=600 --diagnostics=1 --coefficient=1.5",
+      "results": "results/aqdc-fixed-alpha-1p5-v2",
+      "console_log": "aqdc-fixed-alpha-1.5.console.log"
+    },
+    {
+      "key": "fixed-2",
+      "label": "Fixed alpha=2",
+      "coefficient": 2.0,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --raw-rtt=1 --duration=600 --diagnostics=1 --coefficient=2",
+      "results": "results/aqdc-fixed-alpha-2-v2",
+      "console_log": "aqdc-fixed-alpha-2.console.log"
+    }
+  ],
+  "alpha_one_matches_original": true,
+  "analysis_window_s": [
+    0.1,
+    600.0
+  ],
+  "percentile_method": "numpy linear; unweighted valid TCP estimator-input samples, not per-packet RTT",
+  "analysis_script_sha256": "aaa8ba87b9341a2bfe59ccfad9073c46da44730ef3b98f7b11d3c45d08f7d21f",
+  "network": {
+    "access_mbps": 100,
+    "bottleneck_mbps": 10,
+    "propagation_rtt_ms": 50,
+    "bottleneck_fifo_bytes": 62500,
+    "device_queue_packets": 1,
+    "mss_bytes": 1448,
+    "queue_goodput_sample_interval_s": 0.2,
+    "receiver_drain_s": 1
+  },
+  "implementation": "aqdc-fixed",
+  "provenance_note": "Saved experiment source hashes and git snapshot describe the original simulation. Paths and replay commands were normalized during the naming-only migration; numeric measurements are unchanged."
+}

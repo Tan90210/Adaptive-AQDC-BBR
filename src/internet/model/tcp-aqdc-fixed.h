@@ -4,7 +4,7 @@
 #include "tcp-aqdc-bbr.h"
 namespace ns3
 {
-/** Stage 1 ablation: constant debt multiplier, no adaptive update. */
+/** Fixed-coefficient AQDC ablation: constant debt multiplier, no adaptive update. */
 class TcpAqdcFixed : public TcpAqdcBbr
 {
   public:

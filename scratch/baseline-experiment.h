@@ -32,7 +32,7 @@ Ptr<PacketSink> sink;
 Ptr<QueueDisc> queueDisc;
 Ptr<TcpAqdcBbr> aqdc;
 bool diagnostics = false;
-bool stage1 = false;
+bool rawRtt = false;
 double coefficient = 1.0;
 uint32_t debtIncreases = 0;
 uint32_t compensationEntries = 0;
@@ -109,7 +109,7 @@ AttachTraces(Ptr<BulkSendApplication> application)
     NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("CongestionWindow",
                                                        MakeCallback(&CwndChanged)),
                     "Missing congestion-window trace");
-    if (stage1)
+    if (rawRtt)
     {
         NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("RttSample", MakeCallback(&RawRttSample)),
                         "Missing raw RTT sample trace");
@@ -157,11 +157,11 @@ SampleThroughput()
 } // namespace
 
 inline int
-RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folderPrefix, bool defaultStage1 = false)
+RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folderPrefix, bool defaultRawRtt = false)
 {
-    stage1 = defaultStage1;
+    rawRtt = defaultRawRtt;
     CommandLine cmd(__FILE__);
-    cmd.AddValue("stage1", "Write Stage 1 raw RTT schema and stage-prefixed run folder", stage1);
+    cmd.AddValue("raw-rtt", "Record raw and smoothed RTT samples in a separate versioned result folder", rawRtt);
     cmd.AddValue("coefficient", "Positive constant debt multiplier (fixed controller only)", coefficient);
     cmd.AddValue("duration", "Application stop time in seconds", stopTime);
     cmd.AddValue("diagnostics", "Print AQDC compensation events to the console", diagnostics);
@@ -171,16 +171,16 @@ RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folder
     NS_ABORT_MSG_IF(!std::isfinite(coefficient) || coefficient <= 0, "Invalid coefficient");
     bool fixed = controller == TcpAqdcFixed::GetTypeId();
     NS_ABORT_MSG_IF(!fixed && coefficient != 1.0, "coefficient applies only to TcpAqdcFixed");
-    NS_ABORT_MSG_IF(fixed && !stage1, "Fixed ablation requires Stage 1 measurement schema");
+    NS_ABORT_MSG_IF(fixed && !rawRtt, "Fixed-coefficient experiments require raw RTT measurements");
     if (fixed)
     {
         Config::SetDefault("ns3::TcpAqdcFixed::CompensationCoefficient", DoubleValue(coefficient));
     }
     std::string prefix = folderPrefix;
-    if (stage1)
+    if (rawRtt)
     {
         std::ostringstream name;
-        name << "stage1-" << folderPrefix;
+        name << (fixed ? folderPrefix : (folderPrefix == "bbr-baseline" ? "bbr-raw-baseline" : "aqdc-raw-baseline"));
         if (fixed) { name << "-alpha-" << coefficient; }
         prefix = name.str();
         std::replace(prefix.begin(), prefix.end(), '.', 'p');
@@ -202,9 +202,9 @@ RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folder
     }
     Open(cwndFile, output / "cwnd.dat");
     Open(rttFile, output / "rtt.dat");
-    if (stage1)
+    if (rawRtt)
     {
-        rttFile << "# stage1-rtt-v1 time_s raw_estimator_rtt_ms smoothed_rtt_ms\n"
+        rttFile << "# aqdc-rtt-samples-v1 time_s raw_estimator_rtt_ms smoothed_rtt_ms\n"
                 << "# controller=" << controller.GetName() << " coefficient=" << coefficient
                 << " stop_s=" << stopTime << " start_s=" << startTime << " seed=1 run=1\n";
     }

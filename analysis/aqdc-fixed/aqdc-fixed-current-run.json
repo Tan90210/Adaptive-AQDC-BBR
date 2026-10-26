@@ -1,0 +1,15 @@
+{
+  "manifest": "analysis/aqdc-fixed/aqdc-fixed-duration-120s-v2/aqdc-fixed-run-manifest.json",
+  "duration_s": 120.0,
+  "plotted_controllers": {
+    "original": "Original AQDC (alpha = 1)",
+    "fixed-1.5": "Fixed-coefficient AQDC (alpha = 1.5)"
+  },
+  "selection_note": "alpha=1.5 illustrates stronger compensation, not an optimum; metrics retain full sweep",
+  "graphs": [
+    "analysis/figures/aqdc-fixed/aqdc-fixed-cwnd.png",
+    "analysis/figures/aqdc-fixed/aqdc-fixed-rtt.png",
+    "analysis/figures/aqdc-fixed/aqdc-fixed-queue.png",
+    "analysis/figures/aqdc-fixed/aqdc-fixed-throughput.png"
+  ]
+}

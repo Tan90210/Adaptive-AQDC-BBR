@@ -21,5 +21,7 @@ __pycache__/
 .idea/
 .DS_Store
 
-# Stage 1 raw-sample runs; analysis retains manifests and metrics.
-/results/stage1-*-v*/
+# Fixed-coefficient AQDC raw-sample runs; analysis retains manifests and metrics.
+/results/aqdc-fixed-*-v*/
+/results/bbr-raw-baseline-v*/
+/results/aqdc-raw-baseline-v*/
