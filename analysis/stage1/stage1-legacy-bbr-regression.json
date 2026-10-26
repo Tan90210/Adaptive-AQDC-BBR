@@ -1,0 +1,18 @@
+{
+  "reference": "results/bbr-baseline-v7",
+  "after_changes": "results/bbr-baseline-v8",
+  "byte_identical": {
+    "cwnd.dat": true,
+    "rtt.dat": true,
+    "queueSize.dat": true,
+    "throughput.dat": true
+  },
+  "aqdc_reference": "results/aqdc-baseline-v1",
+  "aqdc_after_changes": "results/aqdc-baseline-v2",
+  "aqdc_byte_identical": {
+    "cwnd.dat": true,
+    "rtt.dat": true,
+    "queueSize.dat": true,
+    "throughput.dat": true
+  }
+}

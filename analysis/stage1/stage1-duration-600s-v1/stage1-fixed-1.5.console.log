@@ -1,0 +1,7 @@
+Controller: ns3::TcpAqdcFixed
+Results: "/home/tanay/Adaptive-AQDC-BBR/results/stage1-aqdc-fixed-alpha-1p5-v2"
+AQDC entry time_s=10.150348255 debt_bytes=41648.21875 coefficient=1.5 target_bytes=40578 inflight_bytes=97016
+AQDC complete time_s=10.198412255 debt_bytes=41648.21875 coefficient=1.5 target_bytes=40578 inflight_bytes=39096
+AQDC entry time_s=20.262838813 debt_bytes=2686.5085 coefficient=1.5 target_bytes=105329 inflight_bytes=105704
+AQDC complete time_s=20.265242013 debt_bytes=2686.5085 coefficient=1.5 target_bytes=105329 inflight_bytes=102808
+AQDC summary debt_increases=551 entries=2 completions=2 remaining_debt_bytes=197562.483

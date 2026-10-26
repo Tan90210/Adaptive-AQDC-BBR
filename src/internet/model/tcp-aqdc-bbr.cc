@@ -107,6 +107,13 @@ TcpAqdcBbr::UpdateBottleneckBandwidth(Ptr<TcpSocketState> tcb,
 uint32_t
 TcpAqdcBbr::CalculateTarget(DataRate bandwidth, Time minRtt, uint32_t segmentSize) const
 {
+    return CalculateScaledTarget(bandwidth, minRtt, segmentSize, 1.0);
+}
+
+uint32_t
+TcpAqdcBbr::CalculateScaledTarget(DataRate bandwidth, Time minRtt, uint32_t segmentSize,
+                                 double coefficient) const
+{
     uint32_t floor = static_cast<uint32_t>(
         std::min<uint64_t>(4ULL * segmentSize, std::numeric_limits<uint32_t>::max()));
     if (minRtt == Time::Max() || !minRtt.IsStrictlyPositive() || bandwidth.GetBitRate() == 0)
@@ -115,7 +122,7 @@ TcpAqdcBbr::CalculateTarget(DataRate bandwidth, Time minRtt, uint32_t segmentSiz
     }
     double bdp = bandwidth.GetBitRate() / 8.0 * minRtt.GetSeconds();
     // Subtract in floating point: unsigned BDP - debt could wrap to a huge window.
-    double target = std::max<double>(floor, bdp - m_queueDebt.Get());
+    double target = std::max<double>(floor, bdp - coefficient * m_queueDebt.Get());
     return static_cast<uint32_t>(
         std::min<double>(std::floor(target), std::numeric_limits<uint32_t>::max()));
 }

@@ -208,6 +208,8 @@ class RttHistory
 class TcpSocketBase : public TcpSocket
 {
   public:
+    /** Raw estimator input, followed by the updated smoothed estimate. */
+    typedef void (*RttSampleCallback)(Time raw, Time smoothed);
     /**
      * Get the type ID.
      * @brief Get the type ID.
@@ -373,6 +375,8 @@ class TcpSocketBase : public TcpSocket
      * @brief Callback pointer for RTT trace chaining
      */
     TracedCallback<Time, Time> m_srttTrace;
+    // One event per valid estimator input, including consecutive equal samples.
+    TracedCallback<Time, Time> m_rttSampleTrace;
 
     /**
      * @brief Callback pointer for Last RTT trace chaining

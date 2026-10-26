@@ -102,7 +102,7 @@ Build with tests enabled, then run:
 
 The AQDC suite exercises seeded initialization, byte conversion, repeated estimates, decreases, non-ProbeBW updates, invalid RTT/rate observations, filtered versus raw rate changes, target floors and saturation, zero-ACK and loss-recovery window paths, zero debt, application-limited drainage, repeated episodes, and independent fork state. It also verifies that completion is possible without waiting for the native 200 ms timer.
 
-The comparison computes interval-weighted receiver goodput and creates `analysis/figures/week2-comparison.png`. For an exact pair, supply `--bbr-run` and `--aqdc-run`. It rejects shortened runs rather than silently comparing incompatible durations.
+The comparison computes interval-weighted receiver goodput and creates four overlays in `analysis/figures/comparison/`. For an exact pair, supply `--bbr-run` and `--aqdc-run`. It rejects shortened runs rather than silently comparing incompatible durations.
 
 ## 7. What can be claimed
 
@@ -133,3 +133,5 @@ The first episode enters at 10.150348255 s with 41,648.21875 bytes of estimated 
 | Maximum sampled forward FIFO occupancy (packets) | 41 | 41 |
 
 This result is mixed: goodput and smoothed RTT improve slightly, but mean queue occupancy increases. The internal debt resets at each completed episode; it then accumulates again, leaving 34,345.413 estimated bytes at the end of this run. Neither a debt reset nor this single comparison demonstrates an empty real queue or reproduces the paper's reported improvement percentages.
+
+The comparison script also saves four separate Week 1/Week 2 overlay graphs in `analysis/figures/comparison/`: `cwnd.png`, `rtt.png`, `queue.png`, and `throughput.png`. Blue solid lines show Week 1 BBRv1; orange dashed lines show Week 2 AQDC-BBRv1. Each figure identifies its source runs.

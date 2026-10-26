@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "ns3/tcp-aqdc-bbr.h"
+#include "ns3/tcp-aqdc-fixed.h"
+#include "ns3/double.h"
 #include "ns3/simulator.h"
 #include "ns3/tcp-rate-ops.h"
 #include "ns3/test.h"
@@ -286,12 +288,64 @@ class AqdcSlowDrainTest : public TestCase
     }
 };
 
+class FixedTestController : public TcpAqdcFixed
+{
+  public:
+    using TcpAqdcBbr::ObserveBandwidth;
+    using TcpAqdcFixed::CalculateTarget;
+};
+class AqdcFixedTest : public TestCase
+{
+  public:
+    AqdcFixedTest() : TestCase("Fixed coefficient arithmetic, floor, fork and episode snapshot") {}
+  private:
+    void DoRun() override
+    {
+        auto cc = CreateObject<FixedTestController>();
+        cc->ObserveBandwidth(DataRate("6.4Mbps"), MilliSeconds(100), true);
+        cc->ObserveBandwidth(DataRate("8Mbps"), MilliSeconds(100), true);
+        const double coefficients[] = {0.5, 1.0, 1.5, 2.0};
+        const uint32_t expected[] = {90000, 80000, 70000, 60000};
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            cc->SetAttribute("CompensationCoefficient", DoubleValue(coefficients[i]));
+            NS_TEST_ASSERT_MSG_EQ(cc->CalculateTarget(DataRate("8Mbps"), MilliSeconds(100), 1448),
+                                  expected[i], "Scaled byte target incorrect");
+        }
+        NS_TEST_ASSERT_MSG_EQ(cc->CalculateTarget(DataRate("1Mbps"), MilliSeconds(100), 1448),
+                              5792, "Must apply four-MSS floor without unsigned wrap");
+        auto fork = DynamicCast<TcpAqdcFixed>(cc->Fork());
+        NS_TEST_ASSERT_MSG_NE(fork, nullptr, "Fork preserves fixed controller type");
+        NS_TEST_ASSERT_MSG_EQ(fork->GetCompensationCoefficient(), 2.0, "Fork retains configuration");
+        NS_TEST_ASSERT_MSG_EQ(fork->GetQueueDebt(), 0, "Fork has independent debt history");
+        AqdcFixture f;
+        f.cc = CreateObject<TcpAqdcFixed>();
+        f.cc->SetRateOps(CreateObject<TcpRateLinux>());
+        f.cc->CongestionStateSet(f.state, TcpSocketState::CA_OPEN);
+        f.cc->UpdateBottleneckBandwidth(f.state, f.sample);
+        f.cc->EnterProbeBW();
+        f.AddDebt();
+        auto fixed = DynamicCast<TcpAqdcFixed>(f.cc);
+        fixed->SetCompensationCoefficient(1.5);
+        f.StartCompensation(120000);
+        NS_TEST_ASSERT_MSG_EQ(f.cc->GetCompensationTarget(), 25000, "Entry target uses coefficient");
+        fixed->SetCompensationCoefficient(0.5);
+        f.cc->HandleProbeRTT(f.state);
+        NS_TEST_ASSERT_MSG_EQ(f.cc->GetCompensationTarget(), 25000, "Active target stays fixed");
+        f.state->m_bytesInFlight = 25000;
+        f.cc->HandleProbeRTT(f.state);
+        NS_TEST_ASSERT_MSG_EQ(f.cc->IsCompensating(), false, "Actual inflight controls completion");
+        Simulator::Destroy();
+    }
+};
+
 class TcpAqdcTestSuite : public TestSuite
 {
   public:
     TcpAqdcTestSuite()
         : TestSuite("tcp-aqdc", Type::UNIT)
     {
+        AddTestCase(new AqdcFixedTest(), TestCase::Duration::QUICK);
         AddTestCase(new AqdcDebtTest(), TestCase::Duration::QUICK);
         AddTestCase(new AqdcTargetTest(), TestCase::Duration::QUICK);
         AddTestCase(new AqdcFilteredUpdateTest(), TestCase::Duration::QUICK);

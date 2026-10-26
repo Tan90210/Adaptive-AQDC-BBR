@@ -5,6 +5,7 @@
 
 #include "ns3/applications-module.h"
 #include "ns3/tcp-aqdc-bbr.h"
+#include "ns3/tcp-aqdc-fixed.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/network-module.h"
@@ -12,6 +13,8 @@
 #include "ns3/traffic-control-module.h"
 
 #include <algorithm>
+#include <cmath>
+#include <sstream>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -29,6 +32,8 @@ Ptr<PacketSink> sink;
 Ptr<QueueDisc> queueDisc;
 Ptr<TcpAqdcBbr> aqdc;
 bool diagnostics = false;
+bool stage1 = false;
+double coefficient = 1.0;
 uint32_t debtIncreases = 0;
 uint32_t compensationEntries = 0;
 uint32_t compensationCompletions = 0;
@@ -57,11 +62,12 @@ CompensationEvent(uint8_t event, double debt, uint32_t target, uint32_t inflight
     {
         std::cout << std::setprecision(12) << "AQDC " << (event == 0 ? "entry" : "complete")
                   << " time_s=" << Now().GetSeconds() << " debt_bytes=" << debt
-                  << " target_bytes=" << target << " inflight_bytes=" << inflight << '\n';
+                  << " target_bytes=" << target << " inflight_bytes=" << inflight
+                  << " coefficient=" << coefficient << '\n';
     }
 }
 constexpr double startTime = 0.1;
-constexpr double stopTime = 120;
+double stopTime = 120;
 constexpr double drainTime = 1;
 constexpr double sampleInterval = 0.2;
 constexpr uint32_t segmentSize = 1448;
@@ -89,6 +95,13 @@ RttChanged(Time, Time value)
 }
 
 void
+RawRttSample(Time raw, Time smoothed)
+{
+    rttFile << Now().GetSeconds() << ' ' << raw.GetSeconds() * 1000
+            << ' ' << smoothed.GetSeconds() * 1000 << '\n';
+}
+
+void
 AttachTraces(Ptr<BulkSendApplication> application)
 {
     auto socket = application->GetSocket();
@@ -96,8 +109,16 @@ AttachTraces(Ptr<BulkSendApplication> application)
     NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("CongestionWindow",
                                                        MakeCallback(&CwndChanged)),
                     "Missing congestion-window trace");
-    NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("RTT", MakeCallback(&RttChanged)),
-                    "Missing RTT trace");
+    if (stage1)
+    {
+        NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("RttSample", MakeCallback(&RawRttSample)),
+                        "Missing raw RTT sample trace");
+    }
+    else
+    {
+        NS_ABORT_MSG_IF(!socket->TraceConnectWithoutContext("RTT", MakeCallback(&RttChanged)),
+                        "Missing RTT trace");
+    }
     PointerValue controller;
     socket->GetAttribute("CongestionOps", controller);
     aqdc = DynamicCast<TcpAqdcBbr>(controller.Get<TcpCongestionOps>());
@@ -136,11 +157,34 @@ SampleThroughput()
 } // namespace
 
 inline int
-RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folderPrefix)
+RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folderPrefix, bool defaultStage1 = false)
 {
+    stage1 = defaultStage1;
     CommandLine cmd(__FILE__);
+    cmd.AddValue("stage1", "Write Stage 1 raw RTT schema and stage-prefixed run folder", stage1);
+    cmd.AddValue("coefficient", "Positive constant debt multiplier (fixed controller only)", coefficient);
+    cmd.AddValue("duration", "Application stop time in seconds", stopTime);
     cmd.AddValue("diagnostics", "Print AQDC compensation events to the console", diagnostics);
     cmd.Parse(argc, argv);
+    NS_ABORT_MSG_IF(!std::isfinite(stopTime) || stopTime <= startTime + sampleInterval,
+                    "duration must be finite and exceed the first goodput sample");
+    NS_ABORT_MSG_IF(!std::isfinite(coefficient) || coefficient <= 0, "Invalid coefficient");
+    bool fixed = controller == TcpAqdcFixed::GetTypeId();
+    NS_ABORT_MSG_IF(!fixed && coefficient != 1.0, "coefficient applies only to TcpAqdcFixed");
+    NS_ABORT_MSG_IF(fixed && !stage1, "Fixed ablation requires Stage 1 measurement schema");
+    if (fixed)
+    {
+        Config::SetDefault("ns3::TcpAqdcFixed::CompensationCoefficient", DoubleValue(coefficient));
+    }
+    std::string prefix = folderPrefix;
+    if (stage1)
+    {
+        std::ostringstream name;
+        name << "stage1-" << folderPrefix;
+        if (fixed) { name << "-alpha-" << coefficient; }
+        prefix = name.str();
+        std::replace(prefix.begin(), prefix.end(), '.', 'p');
+    }
     RngSeedManager::SetSeed(1);
     RngSeedManager::SetRun(1);
 
@@ -150,7 +194,7 @@ RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folder
     // Atomically reserve the next free version, preserving previous baselines.
     for (uint64_t version = 1;; ++version)
     {
-        output = root / (folderPrefix + "-v" + std::to_string(version));
+        output = root / (prefix + "-v" + std::to_string(version));
         if (fs::create_directory(output))
         {
             break;
@@ -158,6 +202,12 @@ RunBaseline(int argc, char* argv[], TypeId controller, const std::string& folder
     }
     Open(cwndFile, output / "cwnd.dat");
     Open(rttFile, output / "rtt.dat");
+    if (stage1)
+    {
+        rttFile << "# stage1-rtt-v1 time_s raw_estimator_rtt_ms smoothed_rtt_ms\n"
+                << "# controller=" << controller.GetName() << " coefficient=" << coefficient
+                << " stop_s=" << stopTime << " start_s=" << startTime << " seed=1 run=1\n";
+    }
     Open(queueFile, output / "queueSize.dat");
     Open(throughputFile, output / "throughput.dat");
 

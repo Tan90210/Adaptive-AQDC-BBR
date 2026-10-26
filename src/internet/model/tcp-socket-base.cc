@@ -202,6 +202,10 @@ TcpSocketBase::GetTypeId()
                             "Smoothed RTT",
                             MakeTraceSourceAccessor(&TcpSocketBase::m_srttTrace),
                             "ns3::TracedValueCallback::Time")
+            .AddTraceSource("RttSample",
+                            "Every valid RTT estimator input and resulting smoothed RTT",
+                            MakeTraceSourceAccessor(&TcpSocketBase::m_rttSampleTrace),
+                            "ns3::TcpSocketBase::RttSampleCallback")
             .AddTraceSource("LastRTT",
                             "RTT of the last (S)ACKed packet",
                             MakeTraceSourceAccessor(&TcpSocketBase::m_lastRttTrace),
@@ -3798,6 +3802,7 @@ TcpSocketBase::EstimateRtt(const TcpHeader& tcpHeader)
                     m_minRto);
         m_tcb->m_srtt = m_rtt->GetEstimate();
         m_tcb->m_minRtt = std::min(m_tcb->m_srtt.Get(), m_tcb->m_minRtt);
+        m_rttSampleTrace(rtt, m_tcb->m_srtt.Get());
         NS_LOG_INFO(this << m_tcb->m_srtt << m_tcb->m_minRtt);
     }
 }

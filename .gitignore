@@ -20,3 +20,6 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# Stage 1 raw-sample runs; analysis retains manifests and metrics.
+/results/stage1-*-v*/

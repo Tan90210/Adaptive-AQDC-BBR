@@ -53,6 +53,9 @@ class TcpAqdcBbr : public TcpBbr
     /** One-to-one target; the isolated extension point for Week 3's repayment rule. */
     virtual uint32_t CalculateTarget(DataRate bandwidth, Time minRtt, uint32_t segmentSize) const;
 
+    uint32_t CalculateScaledTarget(DataRate bandwidth, Time minRtt, uint32_t segmentSize,
+                                   double coefficient) const;
+
   private:
     DataRate m_previousBandwidth{0};
     bool m_havePreviousBandwidth{false};

@@ -1,0 +1,66 @@
+{
+  "note": "Redundant first 120 s cohort removed after exact byte comparison; final cohort retained.",
+  "retained_manifest": "analysis/stage1/stage1-duration-120s-v2/stage1-run-manifest.json",
+  "duplicates": [
+    {
+      "removed": "results/stage1-bbr-baseline-v1",
+      "retained": "results/stage1-bbr-baseline-v3",
+      "sha256": {
+        "cwnd.dat": "33efd339db3cb346ff1aaf88c6bec6a26d6c1b57de023c9f72f45ff526f64100",
+        "rtt.dat": "a3da04d962ff13e2c2eaa44fa6297af34cd653d46b8afde5f30570b62e0329f4",
+        "queueSize.dat": "97d032a5234c529e67a8f013750822390b8608e284e8cc46b179aaaba3d1728c",
+        "throughput.dat": "14ac00aebab3946df614552614151860bda25ea3bacb6fecd39a9acc79716796"
+      }
+    },
+    {
+      "removed": "results/stage1-aqdc-baseline-v1",
+      "retained": "results/stage1-aqdc-baseline-v3",
+      "sha256": {
+        "cwnd.dat": "651f12beff3960277247ea4c0e1b46673365c363e5c468b2420f8657342e2a3b",
+        "rtt.dat": "cc867cf85c970956af0859f4bdbf74fd17080b001bdd159803b9a503e3901070",
+        "queueSize.dat": "8389832c809340c9ebc7a6e006b5dae512fd79aefd2026b1e611b915478bff9b",
+        "throughput.dat": "c41e048f0ef3eebeaf6e5e814feff9f9f8139ff6beb63b4e0e157db77782c144"
+      }
+    },
+    {
+      "removed": "results/stage1-aqdc-fixed-alpha-0p5-v1",
+      "retained": "results/stage1-aqdc-fixed-alpha-0p5-v3",
+      "sha256": {
+        "cwnd.dat": "c19b71f443e6a73db31f32136a53547759e7e6bab96a4b8412c967aecece8ca4",
+        "rtt.dat": "e72173fe2813dfc7c30f6b0166035f3e3affe40096e51cafb4e26e45fa685004",
+        "queueSize.dat": "e3856c140fd68e467cc07b7799b61852899bc337ebcc2ebc640f4cd26ebd728e",
+        "throughput.dat": "6fbaed170f264465d7cc96b009aab26642f63401f343add2df307d3eb261f10e"
+      }
+    },
+    {
+      "removed": "results/stage1-aqdc-fixed-alpha-1-v1",
+      "retained": "results/stage1-aqdc-fixed-alpha-1-v3",
+      "sha256": {
+        "cwnd.dat": "651f12beff3960277247ea4c0e1b46673365c363e5c468b2420f8657342e2a3b",
+        "rtt.dat": "1ad59c99f679ad776373ae0ca7fd542a61e05de350c2a43e60d3bec460d73bad",
+        "queueSize.dat": "8389832c809340c9ebc7a6e006b5dae512fd79aefd2026b1e611b915478bff9b",
+        "throughput.dat": "c41e048f0ef3eebeaf6e5e814feff9f9f8139ff6beb63b4e0e157db77782c144"
+      }
+    },
+    {
+      "removed": "results/stage1-aqdc-fixed-alpha-1p5-v1",
+      "retained": "results/stage1-aqdc-fixed-alpha-1p5-v3",
+      "sha256": {
+        "cwnd.dat": "6db5431ca6795b5d0b6d5ef0d3e0f4da42d49d9ac93315e41ffee188c225738d",
+        "rtt.dat": "bc89e72ee10a58b6a80b7c33e23cbd365938ea76def403630581f7187df809a2",
+        "queueSize.dat": "8ac2cc8c34579098ad152e2aa0ad870babe8d6f07ede8653c92dd4b6654fe390",
+        "throughput.dat": "0b7eefb0ec4b4f1e47152ceb7171b06aff36e8751854903abbda5e1b71a548e5"
+      }
+    },
+    {
+      "removed": "results/stage1-aqdc-fixed-alpha-2-v1",
+      "retained": "results/stage1-aqdc-fixed-alpha-2-v3",
+      "sha256": {
+        "cwnd.dat": "d77c3394a952b6d1dd86a2ec8b6d1383d2fe012d0c3842d8f6e592acd01dac29",
+        "rtt.dat": "4454ac9c1f77efa82e2defee02b0387cf77c30456d46430e077353bcdb3e0e5a",
+        "queueSize.dat": "384b61e00f58720a09695808d8c058fe66fccd2aa5156b8ecd0d966c664402e1",
+        "throughput.dat": "2f1a7161d97a73a7597314873251476df8a1ea483657248be324808239adee68"
+      }
+    }
+  ]
+}

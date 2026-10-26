@@ -1,0 +1,95 @@
+{
+  "stage": "stage1",
+  "duration_s": 120.0,
+  "seed": 1,
+  "run": 1,
+  "coefficients": [
+    0.5,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "purpose": "Fixed-coefficient ablation; no adaptation or tuned optimum",
+  "git_head": "e7152634315d64b2ad7befd7a673c910e700f756",
+  "git_status": " M .gitignore\n M README.md\n M analysis/compare_baselines.py\n M analysis/figures/week2-comparison.png\n M doc/aqdc-week2.md\n M scratch/.gitignore\n M scratch/baseline-experiment.h\n M src/internet/CMakeLists.txt\n M src/internet/model/tcp-aqdc-bbr.cc\n M src/internet/model/tcp-aqdc-bbr.h\n M src/internet/model/tcp-socket-base.cc\n M src/internet/model/tcp-socket-base.h\n M src/internet/test/tcp-aqdc-test.cc\n M src/internet/test/tcp-rtt-estimation.cc\n?? analysis/figures/comparison/\n?? analysis/figures/stage1/\n?? analysis/stage1/\n?? analysis/stage1_fixed_coefficients.py\n?? analysis/test_stage1_fixed_coefficients.py\n?? scratch/aqdc-fixed-experiment.cc\n?? src/internet/model/tcp-aqdc-fixed.cc\n?? src/internet/model/tcp-aqdc-fixed.h\n",
+  "source_sha256": {
+    "scratch/baseline-experiment.h": "6a13324eefc2c6d8b92f5250652daf6568efe501b39ff6626363e4bb2905fdb0",
+    "src/internet/model/tcp-aqdc-bbr.cc": "901de3759738f553527ba21bd629c3e4a46b8076db82a60f3d2c0411e3e4210d",
+    "src/internet/model/tcp-aqdc-fixed.cc": "fb0358c20c470bbceecf4785fd5f20a8a460f1e4fd26bfbdec59430bb0da9de9",
+    "src/internet/model/tcp-socket-base.cc": "1b3078eb5b8b76e108ef99ae22663a08b024fc69bb1125db8b735ced3ecd8bc4",
+    "analysis/stage1_fixed_coefficients.py": "164e9c686cbf3405a31ca9aae0e6053b33eaea46ee42082c3b3d030fcc4da07e"
+  },
+  "runs": [
+    {
+      "key": "bbr",
+      "label": "BBRv1",
+      "coefficient": 1.0,
+      "controller": "ns3::TcpBbr",
+      "command": "bbr-baseline-experiment --stage1=1 --duration=120 --diagnostics=1",
+      "results": "results/stage1-bbr-baseline-v3",
+      "console_log": "stage1-bbr.console.log"
+    },
+    {
+      "key": "original",
+      "label": "Original AQDC",
+      "coefficient": 1.0,
+      "controller": "ns3::TcpAqdcBbr",
+      "command": "aqdc-baseline-experiment --stage1=1 --duration=120 --diagnostics=1",
+      "results": "results/stage1-aqdc-baseline-v3",
+      "console_log": "stage1-original.console.log"
+    },
+    {
+      "key": "fixed-0.5",
+      "label": "Fixed alpha=0.5",
+      "coefficient": 0.5,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --stage1=1 --duration=120 --diagnostics=1 --coefficient=0.5",
+      "results": "results/stage1-aqdc-fixed-alpha-0p5-v3",
+      "console_log": "stage1-fixed-0.5.console.log"
+    },
+    {
+      "key": "fixed-1",
+      "label": "Fixed alpha=1",
+      "coefficient": 1.0,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --stage1=1 --duration=120 --diagnostics=1 --coefficient=1",
+      "results": "results/stage1-aqdc-fixed-alpha-1-v3",
+      "console_log": "stage1-fixed-1.console.log"
+    },
+    {
+      "key": "fixed-1.5",
+      "label": "Fixed alpha=1.5",
+      "coefficient": 1.5,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --stage1=1 --duration=120 --diagnostics=1 --coefficient=1.5",
+      "results": "results/stage1-aqdc-fixed-alpha-1p5-v3",
+      "console_log": "stage1-fixed-1.5.console.log"
+    },
+    {
+      "key": "fixed-2",
+      "label": "Fixed alpha=2",
+      "coefficient": 2.0,
+      "controller": "ns3::TcpAqdcFixed",
+      "command": "aqdc-fixed-experiment --stage1=1 --duration=120 --diagnostics=1 --coefficient=2",
+      "results": "results/stage1-aqdc-fixed-alpha-2-v3",
+      "console_log": "stage1-fixed-2.console.log"
+    }
+  ],
+  "alpha_one_matches_original": true,
+  "analysis_window_s": [
+    0.1,
+    120.0
+  ],
+  "analysis_script_sha256": "1a2d475328ccccec874c24100f0e06c8c203ed0b4b0ae07f008be40238536d3d",
+  "network": {
+    "access_mbps": 100,
+    "bottleneck_mbps": 10,
+    "propagation_rtt_ms": 50,
+    "bottleneck_fifo_bytes": 62500,
+    "device_queue_packets": 1,
+    "mss_bytes": 1448,
+    "queue_goodput_sample_interval_s": 0.2,
+    "receiver_drain_s": 1
+  },
+  "percentile_method": "numpy linear; unweighted valid TCP estimator-input samples, not per-packet RTT"
+}

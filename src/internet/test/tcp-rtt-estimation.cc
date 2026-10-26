@@ -53,6 +53,8 @@ class TcpRttEstimationTest : public TcpGeneralTest
     void ConfigureEnvironment() override;
 
   private:
+    uint32_t m_rawSamples{0};
+    void RawSample(Time raw, Time smoothed);
     bool m_enableTs;                 //!< Enable TimeStamp option
     bool m_rttChanged;               //!< True if RTT has changed.
     SequenceNumber32 m_highestTxSeq; //!< Highest sequence number sent.
@@ -98,6 +100,8 @@ Ptr<TcpSocketMsgBase>
 TcpRttEstimationTest::CreateSenderSocket(Ptr<Node> node)
 {
     Ptr<TcpSocketMsgBase> s = TcpGeneralTest::CreateSenderSocket(node);
+    s->TraceConnectWithoutContext("RttSample",
+        MakeCallback(&TcpRttEstimationTest::RawSample, this));
     if (!m_enableTs)
     {
         s->SetAttribute("Timestamp", BooleanValue(false));
@@ -173,9 +177,21 @@ TcpRttEstimationTest::RttTrace(Time oldTime, Time newTime)
 }
 
 void
+TcpRttEstimationTest::RawSample(Time raw, Time smoothed)
+{
+    ++m_rawSamples;
+    NS_TEST_ASSERT_MSG_EQ(raw.IsStrictlyPositive(), true, "Only valid positive samples");
+    NS_TEST_ASSERT_MSG_EQ(smoothed, GetRttEstimator(SENDER)->GetEstimate(),
+                          "Trace reports updated estimator value");
+    NS_TEST_ASSERT_MSG_EQ(m_rawSamples, GetRttEstimator(SENDER)->GetNSamples(),
+                          "One callback per estimator input, including equal RTT samples");
+}
+
+void
 TcpRttEstimationTest::FinalChecks()
 {
     NS_TEST_ASSERT_MSG_EQ(m_rttChanged, true, "Rtt was not updated");
+    NS_TEST_ASSERT_MSG_GT(m_rawSamples, 0, "Raw samples were emitted");
 }
 
 /**

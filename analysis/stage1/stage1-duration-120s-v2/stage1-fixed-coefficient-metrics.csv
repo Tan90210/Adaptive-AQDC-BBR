@@ -1,0 +1,7 @@
+stage,label,coefficient,results,duration_s,raw_rtt_samples,raw_rtt_mean_ms,raw_rtt_median_ms,raw_rtt_p95_ms,raw_rtt_p99_ms,goodput_mbps,sampled_queue_time_mean_packets,sampled_queue_max_packets,compensation_entries,compensation_completions,unfinished_episodes,compensation_total_ms
+stage1,BBRv1,1.0,results/stage1-bbr-baseline-v3,120.0,44711,85.111270157232,86.0,97.0,101.0,9.342558798999164,25.631359466221852,41.0,0,0,0,0
+stage1,Original AQDC,1.0,results/stage1-aqdc-baseline-v3,120.0,45075,84.66491403216861,86.0,97.0,101.0,9.55375666388657,26.110091743119266,41.0,2,2,0,31.241599999999536
+stage1,Fixed alpha=0.5,0.5,results/stage1-aqdc-fixed-alpha-0p5-v3,120.0,45006,84.59107674532285,86.0,97.0,101.0,9.553853277731443,26.030025020850708,41.0,2,2,0,14.419199999998966
+stage1,Fixed alpha=1,1.0,results/stage1-aqdc-fixed-alpha-1-v3,120.0,45075,84.66491403216861,86.0,97.0,101.0,9.55375666388657,26.110091743119266,41.0,2,2,0,31.241599999999536
+stage1,Fixed alpha=1.5,1.5,results/stage1-aqdc-fixed-alpha-1p5-v3,120.0,45069,84.66025427677562,86.0,97.0,101.0,9.552404070058381,26.096747289407837,41.0,2,2,0,50.46720000000171
+stage1,Fixed alpha=2,2.0,results/stage1-aqdc-fixed-alpha-2-v3,120.0,45062,84.66015711686121,86.0,97.0,101.0,9.551051476230192,26.071726438698914,41.0,2,2,0,67.28959999999873
